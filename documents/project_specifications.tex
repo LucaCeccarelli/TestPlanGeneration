@@ -431,100 +431,92 @@ Le diagramme de Gantt est présenté en page suivante.
 \begin{landscape}
 \thispagestyle{empty}
 
-\vspace*{0.5cm}
+\vspace*{0.3cm}
 {\large\bfseries\color{primary} Diagramme de Gantt prévisionnel}
-\vspace{0.5cm}
+\vspace{0.3cm}
 
 \begin{center}
 \begin{ganttchart}[
   hgrid,
   vgrid={*1{dotted}},
-  x unit=1.02cm,
-  y unit title=0.7cm,
-  y unit chart=0.62cm,
+  x unit=1.80cm,
+  y unit title=0.70cm,
+  y unit chart=0.65cm,
   canvas/.style={fill=white, draw=gray!30},
   title/.style={fill=primary!20, draw=primary!60},
-  title label font=\small\bfseries\color{primary},
+  title label font=\footnotesize\bfseries\color{primary},
   title height=1,
-  bar height=0.5,
+  bar height=0.50,
   bar top shift=0.25,
   bar/.style={fill=primary!55, draw=primary!80, rounded corners=1pt},
-  bar label font=\small,
-  bar label node/.style={text width=4.8cm, align=right, font=\small},
+  bar label node/.style={text width=4.0cm, align=right, font=\footnotesize},
   group/.style={fill=primary!80, draw=primary},
-  group label font=\small\bfseries,
+  group label font=\footnotesize\bfseries,
   milestone/.style={fill=orange!90, draw=orange!70!black, rounded corners=2pt},
-  milestone label font=\small\itshape,
-  today=4,
-  today rule/.style={draw=red!70, thick, dashed},
-  today label={\small\color{red!70}\textit{Aujourd'hui}},
-  today label font=\small,
+  milestone label node/.style={text width=4.0cm, align=right, font=\footnotesize\itshape},
   link/.style={-latex, draw=gray!60}
 ]{1}{12}
 
   % ── Titres ────────────────────────────────────────────────────────────────
   \gantttitle{Phase 1 — Exploration}{4}
   \gantttitle{Phase 2 — Prototype}{5}
-  \gantttitle{Phase 3 — Éval. \& Rédaction}{3} \\
+  \gantttitle{Phase 3 — Éval. \& Rédaction}{2} \\
 
-  \gantttitle[title label font=\footnotesize\color{gray}]{Mar}{1}
-  \gantttitle[title label font=\footnotesize\color{gray}]{Avr}{1}
-  \gantttitle[title label font=\footnotesize\color{gray}]{Mai}{1}
-  \gantttitle[title label font=\footnotesize\color{gray}]{Juin}{1}
-  \gantttitle[title label font=\footnotesize\color{gray}]{Sep}{1}
-  \gantttitle[title label font=\footnotesize\color{gray}]{Oct}{1}
-  \gantttitle[title label font=\footnotesize\color{gray}]{Nov}{1}
-  \gantttitle[title label font=\footnotesize\color{gray}]{Déc}{1}
-  \gantttitle[title label font=\footnotesize\color{gray}]{Jan}{1}
-  \gantttitle[title label font=\footnotesize\color{gray}]{Fév}{1}
-  \gantttitle[title label font=\footnotesize\color{gray}]{Mar (s)}{1}
-  \gantttitle[title label font=\footnotesize\color{gray}]{Mar (f)}{1} \\
+  \gantttitle[title label font=\scriptsize\color{gray}]{Mar}{1}
+  \gantttitle[title label font=\scriptsize\color{gray}]{Avr}{1}
+  \gantttitle[title label font=\scriptsize\color{gray}]{Mai}{1}
+  \gantttitle[title label font=\scriptsize\color{gray}]{Juin}{1}
+  \gantttitle[title label font=\scriptsize\color{gray}]{Sep}{1}
+  \gantttitle[title label font=\scriptsize\color{gray}]{Oct}{1}
+  \gantttitle[title label font=\scriptsize\color{gray}]{Nov}{1}
+  \gantttitle[title label font=\scriptsize\color{gray}]{Déc}{1}
+  \gantttitle[title label font=\scriptsize\color{gray}]{Jan}{1}
+  \gantttitle[title label font=\scriptsize\color{gray}]{Fév}{1}
+  \gantttitle[title label font=\scriptsize\color{gray}]{Mars}{1} \\
 
   % ── Phase 1 ───────────────────────────────────────────────────────────────
   \ganttbar[bar/.style={fill=axeA!50,draw=axeA}]
-    {J1 — Veille bibliographique}{1}{3} \\
+    {J1}{1}{3} \\
   \ganttbar[bar/.style={fill=axeA!50,draw=axeA}]
-    {J2 — Positionnement \& axes}{3}{4} \\
+    {J2}{3}{4} \\
   \ganttmilestone[milestone/.style={fill=orange,draw=orange!70!black}]
-    {Livrable 1 : présentation orale}{4} \\[0.2em]
+    {Livrable 1}{4} \\[0.2em]
 
   % ── Phase 2 ───────────────────────────────────────────────────────────────
   \ganttbar[bar/.style={fill=axeB!50,draw=axeB}]
-    {J3 — Impl. extraction Axe A}{5}{6} \\
+    {J3}{5}{6} \\
   \ganttbar[bar/.style={fill=axeB!50,draw=axeB}]
-    {J4 — Annotation \& éval. P/R/F1}{6}{7} \\
+    {J4}{6}{7} \\
   \ganttbar[bar/.style={fill=axeB!50,draw=axeB}]
-    {J5 — Architecture multi-agents}{6}{7} \\
+    {J5}{6}{7} \\
   \ganttbar[bar/.style={fill=axeB!50,draw=axeB}]
-    {J6 — Génération plan de test (Axe B)}{7}{8} \\
+    {J6}{7}{8} \\
   \ganttbar[bar/.style={fill=axeB!50,draw=axeB}]
-    {J7 — Évaluation Axe B}{8}{8} \\
+    {J7}{8}{8} \\
   \ganttmilestone[milestone/.style={fill=orange,draw=orange!70!black}]
-    {Livrable 2 : rapport d'avancement}{8} \\[0.2em]
+    {Livrable 2}{8} \\[0.2em]
 
   % ── Phase 3 ───────────────────────────────────────────────────────────────
   \ganttbar[bar/.style={fill=axeC!45,draw=axeC}]
-    {J8 — Axe C validation (optionnel)}{9}{10} \\
+    {J8}{9}{10} \\
   \ganttbar[bar/.style={fill=axeC!45,draw=axeC}]
-    {J9 — Généralisation (3 normes)}{9}{10} \\
+    {J9}{9}{10} \\
   \ganttbar[bar/.style={fill=axeC!45,draw=axeC}]
-    {J10 — Rapport final \& publication}{10}{11} \\
+    {J10}{10}{11} \\
   \ganttbar[bar/.style={fill=axeC!45,draw=axeC}]
-    {J11 — Soutenance finale}{11}{12} \\
+    {J11}{11}{11} \\
   \ganttmilestone[milestone/.style={fill=orange,draw=orange!70!black}]
-    {Livrable final}{12}
+    {Livrable final}{11}
 
 \end{ganttchart}
 \end{center}
 
-\vspace{0.6em}
-{\small\textit{%
-\textcolor{axeA}{\rule{0.8cm}{5pt}}~Phase 1 / Axe A \quad
-\textcolor{axeB}{\rule{0.8cm}{5pt}}~Phase 2 / Axe B \quad
-\textcolor{axeC}{\rule{0.8cm}{5pt}}~Phase 3 / Axe C \quad
-\textcolor{orange}{\rule{0.3cm}{5pt}\hspace{1pt}$\blacklozenge$}~Jalon de livraison \quad
-\textcolor{red!70}{\textbf{- - -}}~Aujourd'hui (Juin 2026).
-Ce diagramme sera mis à jour régulièrement.}}
+\vspace{0.3em}
+{\footnotesize\textit{%
+\textcolor{axeA}{\rule{0.7cm}{4pt}}~Phase 1 / Axe A \quad
+\textcolor{axeB}{\rule{0.7cm}{4pt}}~Phase 2 / Axe B \quad
+\textcolor{axeC}{\rule{0.7cm}{4pt}}~Phase 3 / Axe C \quad
+\textcolor{orange}{\rule{0.7cm}{4pt}\hspace{1pt}}~Jalon \quad}}
 
 \end{landscape}
 

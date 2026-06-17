@@ -1,0 +1,571 @@
+\documentclass[12pt, a4paper]{article}
+
+% ── Encodage & langue ──────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+
+% ── Mise en page ───────────────────────────────────────────────────────────────
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{setspace}
+\usepackage{pdflscape}   % page en paysage
+\onehalfspacing
+
+% ── Typographie ────────────────────────────────────────────────────────────────
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% ── Couleurs & graphiques ──────────────────────────────────────────────────────
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+
+\definecolor{primary}{RGB}{30, 80, 160}
+\definecolor{lightgray}{RGB}{245, 245, 245}
+\definecolor{axeA}{RGB}{30,  80, 160}
+\definecolor{axeB}{RGB}{0,  140, 140}
+\definecolor{axeC}{RGB}{0,  140, 100}
+
+% ── En-têtes & pieds de page ───────────────────────────────────────────────────
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{primary}{\textit{Cahier des charges}}}
+\fancyhead[R]{\small\textcolor{gray}{\thepage}}
+\fancyfoot[C]{\small\textcolor{gray}{\today}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{primary}\leaders\hrule height \headrulewidth\hfill}}
+
+% ── Titres de sections ─────────────────────────────────────────────────────────
+\usepackage{titlesec}
+\titleformat{\section}
+  {\color{primary}\large\bfseries}
+  {\thesection.}{0.6em}{}
+  [\color{primary}\titlerule]
+\titleformat{\subsection}
+  {\color{primary!80!black}\normalsize\bfseries}
+  {\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}
+  {\normalsize\bfseries}
+  {\thesubsubsection.}{0.5em}{}
+
+% ── Table des matières ─────────────────────────────────────────────────────────
+\usepackage[hidelinks]{hyperref}
+\usepackage{tocloft}
+\renewcommand{\cftsecfont}{\bfseries\color{primary}}
+\renewcommand{\cftsecpagefont}{\bfseries\color{primary}}
+
+% ── Tableaux ───────────────────────────────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{colortbl}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+% ── Listes ─────────────────────────────────────────────────────────────────────
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=1.5em, itemsep=0.3em}
+\setlist[enumerate]{leftmargin=1.5em, itemsep=0.3em}
+
+% ── Boîtes info ────────────────────────────────────────────────────────────────
+\usepackage{tcolorbox}
+\tcbuselibrary{skins, breakable}
+
+\newtcolorbox{infobox}[1][]{
+  colback=lightgray,
+  colframe=primary,
+  fonttitle=\bfseries,
+  title=#1,
+  breakable,
+  arc=4pt,
+  boxrule=0.6pt,
+}
+
+\newtcolorbox{axebox}[2][primary]{
+  colback=#1!8,
+  colframe=#1,
+  fonttitle=\bfseries\color{white},
+  title=#2,
+  coltitle=white,
+  breakable,
+  arc=4pt,
+  boxrule=0.8pt,
+}
+
+% ── Diagramme de Gantt ─────────────────────────────────────────────────────────
+\usepackage{pgfgantt}
+\usepackage{amssymb}
+
+% ══════════════════════════════════════════════════════════════════════════════
+%  PAGE DE TITRE
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{document}
+
+\begin{titlepage}
+  \centering
+  \vspace*{1.5cm}
+
+  {\color{primary}\rule{\linewidth}{1.5pt}}\vspace{0.4cm}
+  {\color{primary}\rule{\linewidth}{0.4pt}}
+
+  \vspace{1cm}
+  {\Huge\bfseries\color{primary} Cahier des charges}\\[0.4cm]
+  {\Large\color{gray} Projet fil rouge - Travail de recherche}
+
+  \vspace{0.8cm}
+  {\color{primary}\rule{\linewidth}{0.4pt}}\vspace{0.2cm}
+  {\color{primary}\rule{\linewidth}{1.5pt}}
+
+  \vspace{2cm}
+
+  \begin{tcolorbox}[
+    colback=primary!10, colframe=primary,
+    arc=6pt, boxrule=1pt,
+    width=0.9\linewidth
+  ]
+    \centering
+    {\large\bfseries\color{primary} Génération automatique de plans de tests}\\[0.3em]
+    {\large\bfseries\color{primary} depuis des normes techniques grâce aux LLMs}
+  \end{tcolorbox}
+
+  \vspace{2.5cm}
+
+  \begin{tabular}{rl}
+    \textbf{Auteur}        & Luca Ceccarelli \\[0.4em]
+    \textbf{Formation}     & INFRES 17 \\[0.4em]
+    \textbf{Encadrants}    & Christelle Urtado \& Sylvain Vauttier \\[0.4em]
+    \textbf{Date}          & Juin 2026 \\[0.4em]
+    \textbf{Version}       & 1.0 \\
+  \end{tabular}
+
+\end{titlepage}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\tableofcontents
+\newpage
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Contexte et périmètre du projet}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Contexte général}
+
+Dans de nombreux secteurs industriels (télécommunications, finance, santé, automobile),
+les produits logiciels doivent se conformer à des normes techniques internationales telles
+que les RFC de l'IETF ou les normes ISO/IEC. Un produit peut être développé en suivant
+une telle norme, et un \textbf{plan de test} permet de vérifier que ce produit respecte
+correctement l'ensemble des spécifications, internes et externes, qui y sont définies.
+
+La norme \textbf{ISO/IEC/IEEE 29119-3:2021} définit le format de référence pour les plans
+de test : chaque cas de test y spécifie un identifiant, un objectif, des préconditions, un
+scénario et des résultats attendus, sans produire de code exécutable.
+
+\subsection{Enjeu industriel et motivation}
+
+Aujourd'hui, les équipes de conformité passent des semaines à rédiger manuellement des
+plans de test à partir de normes qui peuvent compter plusieurs centaines de pages. Ce
+travail est coûteux, répétitif et source d'oublis : de nombreuses normes ne disposent ainsi
+d'aucun plan de test, ce qui nuit à l'interopérabilité des systèmes par conception.
+
+L'automatisation de ce processus permettrait de réduire significativement le
+\textit{time-to-compliance}, de limiter les oublis et d'améliorer l'interopérabilité entre
+implémentations. La norme \textbf{ISO/IEC 18013-5} (permis de conduire numérique mDL)
+constitue un exemple concret : elle dispose d'un plan de test existant, référencé dans
+l'ISO/IEC 18013-6, ce qui offre une base de comparaison idéale pour évaluer une approche
+automatisée.
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Problématique}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Formulation de la problématique}
+
+\begin{infobox}[Problématique centrale]
+\textit{Comment formaliser une approche hybride, combinant l'extraction d'exigences par
+NLP et une architecture agentique, pour automatiser la génération de plans de tests
+fiables à partir de normes techniques ?}
+\end{infobox}
+
+\subsection{Limites des solutions existantes}
+
+Une revue bibliographique systématique (6 articles retenus sur 10 identifiés, issus de
+Google Scholar, IEEE Xplore, ACM DL et HAL, mai 2026) a permis d'identifier deux familles
+d'approches existantes et leurs limites respectives.
+
+\begin{itemize}
+  \item \textbf{Approches LLM existantes} (Haldar \& Capretz 2026 ; Hasan et al. 2025 ;
+    Xue et al. 2024 ; Li et al. 2025) : elles génèrent des tests à partir de code source,
+    de dépôts GitHub, ou de documents de spécification projet en texte libre. Aucune ne
+    part d'une norme technique dense en amont du développement.
+
+  \item \textbf{Approches NLP classiques} (Wang et al. 2022 ; Dwarakanath \& Sengupta
+    2012) : elles traitent des cas d'utilisation UML ou des spécifications fonctionnelles
+    simples. Elles sont incapables d'absorber la densité et la structure hiérarchique
+    d'une norme normative (références croisées, clauses SHALL/SHOULD, annexes normatives).
+\end{itemize}
+
+L'angle mort identifié est donc le suivant : \textbf{aucune approche ne génère
+un plan de test au format ISO 29119-3 directement depuis une norme technique en amont
+de tout développement}, en prenant en compte les dépendances inter-normes.
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Solution proposée et axes de recherche}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Vue d'ensemble de l'approche}
+
+La solution proposée repose sur un pipeline en trois axes de recherche successifs et
+prioritisés, appliqué initialement à la norme ISO/IEC 18013-5 :
+
+\begin{axebox}[axeA]{Axe A — Extraction des exigences techniques - Priorité 1}
+Transformer une norme technique (RFC, ISO) en base de connaissances exploitable, avec
+une perte d'information minimale.
+
+\medskip
+\textbf{Briques technologiques envisagées :}
+\begin{itemize}
+  \item NLP déterministe : tokenisation, POS tagging, extraction de règles normatives ;
+  \item Chunking sémantique par section normative (LangChain RecursiveCharacterTextSplitter) ;
+  \item Embedding et indexation vectorielle pour le retrieval (FAISS).
+\end{itemize}
+
+\medskip
+\textbf{Plan d'expérience :} test de complétude (aucune exigence perdue), métriques
+Précision / Rappel / F1 sur une référence annotée manuellement ; comparaison chunking
+naïf vs.\ chunking sémantique.
+\end{axebox}
+
+\vspace{0.8em}
+
+\begin{axebox}[axeB]{Axe B — Génération agentique du plan de test - Priorité 2}
+Système multi-agents raisonnant sur les exigences extraites (Axe A) pour produire un
+plan de test conforme à l'ISO/IEC/IEEE 29119-3:2021.
+
+\medskip
+\textbf{Architecture multi-agents :}
+\begin{itemize}
+  \item \textbf{Agent Analyste} : reçoit une exigence isolée (sortie Axe A), la contextualise ;
+  \item \textbf{Agent Documentaliste (RAG)} : interroge la base vectorielle et les sources
+    en ligne (RFC, normes référencées) ;
+  \item \textbf{Agent Concepteur} : rédige le cas de test au format ISO 29119-3:2021
+    (ID, objectif, préconditions, étapes, résultat attendu).
+\end{itemize}
+
+\medskip
+\textbf{Plan d'expérience :} test de sensibilité entre différents LLMs, évaluation
+humaine (pertinence et complétude), couverture ISO (ratio sections couvertes / total),
+et validation par comparaison avec le plan de test existant ISO/IEC 18013-6 (En générant le premier test sur la norme ISO/IEC 18013-5).
+\end{axebox}
+
+\vspace{0.8em}
+
+\begin{axebox}[axeC]{Axe C — Validation agentique du plan de test - Priorité 3}
+Valider le plan généré via un système dédié à la détection d'erreurs, de contradictions
+et d'hallucinations.
+
+\medskip
+\textbf{Briques technologiques envisagées :} LLM-as-a-Judge, framework Guardrails AI, scoring automatique de conformité au format ISO 29119-3.
+
+\medskip
+\textbf{Plan d'expérience :} adversarial testing (injection délibérée d'erreurs),
+mesure du taux de détection (contradictions, oublis, hallucinations), comparaison
+validation agentique vs.\ relecture humaine.
+\end{axebox}
+
+\subsection{Livrables attendus}
+
+\begin{enumerate}
+  \item Pipeline d'extraction des exigences depuis une norme PDF (Axe A), évalué sur
+    ISO/IEC 18013-5.
+  \item Système multi-agents de génération de plans de test au format ISO 29119-3 (Axe B),
+    avec évaluation comparative.
+  \item Module de validation agentique (Axe C, si le temps le permet).
+  \item Généralisation du pipeline sur au moins 3 normes différentes (Phase 3).
+  \item Publication scientifique soumise à une conférence ou un journal du domaine.
+\end{enumerate}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Organisation et rôles}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Tableau RACI}
+
+Dans le cadre d'un projet de recherche individuel, la matrice RACI structure la
+répartition des responsabilités entre l'auteur, ses encadrants et le jury.
+
+\vspace{0.5em}
+\begin{center}
+\begin{tabularx}{\linewidth}{|>{\raggedright\arraybackslash}X|C{1.6cm}|C{1.9cm}|C{1.9cm}|C{1.6cm}|}
+  \hline
+  \rowcolor{primary!15}
+  \textbf{Tâche / Activité}
+    & \textbf{Luca C.}
+    & \textbf{C.~Urtado}
+    & \textbf{S.~Vauttier}
+    & \textbf{Jury} \\
+  \hline
+  Veille bibliographique et état de l'art        & R, A & C & C & I \\
+  \hline
+  Conception de la méthode (axes A, B, C)        & R, A & C & C & — \\
+  \hline
+  Implémentation Axe A (extraction NLP)          & R, A & C & C & — \\
+  \hline
+  Implémentation Axe B (multi-agents)            & R, A & C & C & — \\
+  \hline
+  Implémentation Axe C (validation, optionnel)   & R, A & C & C & — \\
+  \hline
+  Évaluation et analyse des résultats            & R, A & C & C & I \\
+  \hline
+  Rédaction du rapport / article                 & R, A & C & C & I \\
+  \hline
+  Validation des jalons intermédiaires           & R    & A & A & I \\
+  \hline
+  Présentation et soutenance finale              & R, A & C & C & I \\
+  \hline
+\end{tabularx}
+\end{center}
+\vspace{0.4em}
+{\small \textbf{Légende :} R = Responsable (réalise), A = Autorité (valide), C = Consulté,
+I = Informé.}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Jalons et planification}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Phases du projet}
+
+Le projet se déroule en trois phases, couvrant mars 2026 à mars 2027.
+
+\vspace{0.5em}
+\begin{center}
+\begin{tabularx}{\linewidth}{|C{0.8cm}|L{3.2cm}|>{\raggedright\arraybackslash}X|L{2.5cm}|}
+  \hline
+  \rowcolor{primary!15}
+  \textbf{N°} & \textbf{Phase} & \textbf{Activités principales} & \textbf{Période} \\
+  \hline
+  \rowcolor{axeA!10}
+  1 & \textbf{Exploration}
+    & Définition du sujet avec les encadrants — Recherche bibliographique
+      (10 articles) — Lecture critique des 6 articles retenus — Feedbacks
+      d'affinement du positionnement — Rédaction de la présentation intermédiaire
+    & Mars – Juin 2026 \\
+  \hline
+  \rowcolor{axeB!10}
+  2 & \textbf{Prototype}
+    & Rédaction de l'introduction (éléments Phase 1) — Implémentation Axe A
+      (extraction ISO/IEC 18013-5) — Évaluation Précision/Rappel/F1 —
+      Implémentation Axe B (multi-agents) — Évaluation par comparaison avec
+      le plan de test existant — Feedbacks encadrants et ajustements
+    & Sept. – Déc. 2026 \\
+  \hline
+  \rowcolor{axeC!10}
+  3 & \textbf{Évaluation \& Rédaction}
+    & Axe C si temps disponible — Généralisation sur 3 normes différentes —
+      Rédaction de la publication — Soutenance finale
+    & Janv. – Mars 2027 \\
+  \hline
+\end{tabularx}
+\end{center}
+
+\subsection{Tableau détaillé des jalons}
+
+\vspace{0.5em}
+\begin{center}
+\begin{tabularx}{\linewidth}{|C{0.6cm}|>{\raggedright\arraybackslash}X|L{2.2cm}|L{2.0cm}|C{1.5cm}|}
+  \hline
+  \rowcolor{primary!15}
+  \textbf{J\#} & \textbf{Jalon / Tâche} & \textbf{Prérequis} & \textbf{Échéance} & \textbf{Charge} \\
+  \hline
+  J1 & Veille biblio systématique \& état de l'art (10 articles, sélection de 6)
+     & —     & Juin 2026    & \textasciitilde{}3 sem. \\
+  \hline
+  J2 & Positionnement et définition des axes A/B/C
+     & J1    & Juin 2026    & \textasciitilde{}1 sem. \\
+  \hline
+  \rowcolor{orange!15}
+  \multicolumn{5}{|l|}{\textit{Livrable intermédiaire 1 : présentation orale — Juin 2026}} \\
+  \hline
+  J3 & Implémentation pipeline d'extraction Axe A
+     & J2    & Sept. 2026    & \textasciitilde{}2 sem. \\
+  \hline
+  J4 & Annotation de la référence \& évaluation P/R/F1 (Axe A)
+     & J3    & Oct. 2026    & \textasciitilde{}1 sem. \\
+  \hline
+  J5 & Conception architecture multi-agents (Axe B)
+     & J3    & Nov. 2026    & \textasciitilde{}3 sem. \\
+  \hline
+  J6 & Génération d'un premier plan de test ISO 29119-3 (Axe B)
+     & J4, J5 & Nov. 2026  & \textasciitilde{}1 sem. \\
+  \hline
+  J7 & Évaluation Axe B (couverture ISO, comparaison plan existant, éval. humaine)
+     & J6    & Déc. 2026    & \textasciitilde{}2 sem. \\
+  \hline
+  \rowcolor{orange!15}
+  \multicolumn{5}{|l|}{\textit{Livrable intermédiaire 2 : réunion rapport d'avancement — Déc. 2026}} \\
+  \hline
+  J8 & Axe C — Validation agentique (optionnel, si temps disponible)
+     & J7    & Fév. 2027    & \textasciitilde{}1 sem. \\
+  \hline
+  J9 & Généralisation sur 3 normes différentes
+     & J7    & Fév. 2027    & \textasciitilde{}1 sem. \\
+  \hline
+  J10 & Rédaction du rapport final et de la publication
+     & J7    & Mars 2027    & \textasciitilde{}2 sem. \\
+  \hline
+  J11 & Préparation et soutenance finale
+     & J10   & Mars 2027    & \textasciitilde{}1 sem. \\
+  \hline
+  \rowcolor{orange!15}
+  \multicolumn{5}{|l|}{\textit{Livrable final : soutenance finale, publication, code source — Mars 2027}} \\
+  \hline
+\end{tabularx}
+\end{center}
+
+\subsection{Diagramme de Gantt prévisionnel}
+
+Le diagramme de Gantt est présenté en page suivante.
+
+% ── PAGE PAYSAGE POUR LE GANTT ────────────────────────────────────────────────
+\begin{landscape}
+\thispagestyle{empty}
+
+\vspace*{0.5cm}
+{\large\bfseries\color{primary} Diagramme de Gantt prévisionnel}
+\vspace{0.5cm}
+
+\begin{center}
+\begin{ganttchart}[
+  hgrid,
+  vgrid={*1{dotted}},
+  x unit=1.02cm,
+  y unit title=0.7cm,
+  y unit chart=0.62cm,
+  canvas/.style={fill=white, draw=gray!30},
+  title/.style={fill=primary!20, draw=primary!60},
+  title label font=\small\bfseries\color{primary},
+  title height=1,
+  bar height=0.5,
+  bar top shift=0.25,
+  bar/.style={fill=primary!55, draw=primary!80, rounded corners=1pt},
+  bar label font=\small,
+  bar label node/.style={text width=4.8cm, align=right, font=\small},
+  group/.style={fill=primary!80, draw=primary},
+  group label font=\small\bfseries,
+  milestone/.style={fill=orange!90, draw=orange!70!black, rounded corners=2pt},
+  milestone label font=\small\itshape,
+  today=4,
+  today rule/.style={draw=red!70, thick, dashed},
+  today label={\small\color{red!70}\textit{Aujourd'hui}},
+  today label font=\small,
+  link/.style={-latex, draw=gray!60}
+]{1}{12}
+
+  % ── Titres ────────────────────────────────────────────────────────────────
+  \gantttitle{Phase 1 — Exploration}{4}
+  \gantttitle{Phase 2 — Prototype}{5}
+  \gantttitle{Phase 3 — Éval. \& Rédaction}{3} \\
+
+  \gantttitle[title label font=\footnotesize\color{gray}]{Mar}{1}
+  \gantttitle[title label font=\footnotesize\color{gray}]{Avr}{1}
+  \gantttitle[title label font=\footnotesize\color{gray}]{Mai}{1}
+  \gantttitle[title label font=\footnotesize\color{gray}]{Juin}{1}
+  \gantttitle[title label font=\footnotesize\color{gray}]{Sep}{1}
+  \gantttitle[title label font=\footnotesize\color{gray}]{Oct}{1}
+  \gantttitle[title label font=\footnotesize\color{gray}]{Nov}{1}
+  \gantttitle[title label font=\footnotesize\color{gray}]{Déc}{1}
+  \gantttitle[title label font=\footnotesize\color{gray}]{Jan}{1}
+  \gantttitle[title label font=\footnotesize\color{gray}]{Fév}{1}
+  \gantttitle[title label font=\footnotesize\color{gray}]{Mar (s)}{1}
+  \gantttitle[title label font=\footnotesize\color{gray}]{Mar (f)}{1} \\
+
+  % ── Phase 1 ───────────────────────────────────────────────────────────────
+  \ganttbar[bar/.style={fill=axeA!50,draw=axeA}]
+    {J1 — Veille bibliographique}{1}{3} \\
+  \ganttbar[bar/.style={fill=axeA!50,draw=axeA}]
+    {J2 — Positionnement \& axes}{3}{4} \\
+  \ganttmilestone[milestone/.style={fill=orange,draw=orange!70!black}]
+    {Livrable 1 : présentation orale}{4} \\[0.2em]
+
+  % ── Phase 2 ───────────────────────────────────────────────────────────────
+  \ganttbar[bar/.style={fill=axeB!50,draw=axeB}]
+    {J3 — Impl. extraction Axe A}{5}{6} \\
+  \ganttbar[bar/.style={fill=axeB!50,draw=axeB}]
+    {J4 — Annotation \& éval. P/R/F1}{6}{7} \\
+  \ganttbar[bar/.style={fill=axeB!50,draw=axeB}]
+    {J5 — Architecture multi-agents}{6}{7} \\
+  \ganttbar[bar/.style={fill=axeB!50,draw=axeB}]
+    {J6 — Génération plan de test (Axe B)}{7}{8} \\
+  \ganttbar[bar/.style={fill=axeB!50,draw=axeB}]
+    {J7 — Évaluation Axe B}{8}{8} \\
+  \ganttmilestone[milestone/.style={fill=orange,draw=orange!70!black}]
+    {Livrable 2 : rapport d'avancement}{8} \\[0.2em]
+
+  % ── Phase 3 ───────────────────────────────────────────────────────────────
+  \ganttbar[bar/.style={fill=axeC!45,draw=axeC}]
+    {J8 — Axe C validation (optionnel)}{9}{10} \\
+  \ganttbar[bar/.style={fill=axeC!45,draw=axeC}]
+    {J9 — Généralisation (3 normes)}{9}{10} \\
+  \ganttbar[bar/.style={fill=axeC!45,draw=axeC}]
+    {J10 — Rapport final \& publication}{10}{11} \\
+  \ganttbar[bar/.style={fill=axeC!45,draw=axeC}]
+    {J11 — Soutenance finale}{11}{12} \\
+  \ganttmilestone[milestone/.style={fill=orange,draw=orange!70!black}]
+    {Livrable final}{12}
+
+\end{ganttchart}
+\end{center}
+
+\vspace{0.6em}
+{\small\textit{%
+\textcolor{axeA}{\rule{0.8cm}{5pt}}~Phase 1 / Axe A \quad
+\textcolor{axeB}{\rule{0.8cm}{5pt}}~Phase 2 / Axe B \quad
+\textcolor{axeC}{\rule{0.8cm}{5pt}}~Phase 3 / Axe C \quad
+\textcolor{orange}{\rule{0.3cm}{5pt}\hspace{1pt}$\blacklozenge$}~Jalon de livraison \quad
+\textcolor{red!70}{\textbf{- - -}}~Aujourd'hui (Juin 2026).
+Ce diagramme sera mis à jour régulièrement.}}
+
+\end{landscape}
+
+\subsection{Méthode de suivi}
+
+Le projet adopte une approche itérative organisée en lots fonctionnels (axes A, B, C),
+permettant de structurer les livraisons et leur validation. Le suivi sera assuré via un
+dépôt Git, avec un tableau de bord de type Kanban,
+mis à jour à chaque feedback encadrants. Les éventuels retards ou changements
+technologiques majeurs feront l'objet d'une discussion avec les encadrants pour valider
+la faisabilité d'une réorganisation.
+
+\newpage
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Références bibliographiques}
+% ══════════════════════════════════════════════════════════════════════════════
+\nocite{*}  % include ALL bib entries in the bibliography
+\bibliographystyle{plain}   % ou alpha, ieeetr, abbrv...
+\bibliography{bibliography}   % file .bib
+
+
+
+\newpage
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Historique des versions}
+\addcontentsline{toc}{section}{Historique des versions}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\begin{center}
+\begin{tabularx}{\linewidth}{|C{1.5cm}|C{2.5cm}|>{\raggedright\arraybackslash}X|}
+  \hline
+  \rowcolor{primary!15}
+  \textbf{Version} & \textbf{Date} & \textbf{Description des modifications} \\
+  \hline
+  1.0 & Juin 2026 & Version initiale du cahier des charges, établie à partir de la présentation intermédiaire. \\
+  \hline
+  & & \\[0.8em]
+  \hline
+  & & \\[0.8em]
+  \hline
+\end{tabularx}
+\end{center}
+
+\end{document}

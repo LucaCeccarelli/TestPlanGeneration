@@ -425,98 +425,109 @@ Le projet se déroule en trois phases, couvrant mars 2026 à mars 2027.
 
 \subsection{Diagramme de Gantt prévisionnel}
 
-Le diagramme de Gantt est présenté en page suivante.
-
 % ── PAGE PAYSAGE POUR LE GANTT ────────────────────────────────────────────────
+% Colonnes : 1=Mar  2=Avr  3=Mai  4=Juin  5=Sep  6=Oct  7=Nov  8=Déc
+%            9=Jan  10=Fév  11=Mars·27   (Juil–Août non représentés)
 \begin{landscape}
 \thispagestyle{empty}
 
-\vspace*{0.3cm}
-{\large\bfseries\color{primary} Diagramme de Gantt prévisionnel}
 \vspace{0.3cm}
-
-\begin{center}
+\noindent
 \begin{ganttchart}[
   hgrid,
-  vgrid={*1{dotted}},
-  x unit=1.80cm,
-  y unit title=0.70cm,
-  y unit chart=0.65cm,
-  canvas/.style={fill=white, draw=gray!30},
-  title/.style={fill=primary!20, draw=primary!60},
+  vgrid={*{10}{dotted}},
+  x unit=2.00cm,
+  y unit title=0.60cm,
+  y unit chart=0.60cm,
+  canvas/.style={fill=white, draw=gray!25},
+  title/.style={fill=primary!18, draw=primary!50},
   title label font=\footnotesize\bfseries\color{primary},
   title height=1,
   bar height=0.50,
   bar top shift=0.25,
-  bar/.style={fill=primary!55, draw=primary!80, rounded corners=1pt},
-  bar label node/.style={text width=4.0cm, align=right, font=\footnotesize},
-  group/.style={fill=primary!80, draw=primary},
-  group label font=\footnotesize\bfseries,
-  milestone/.style={fill=orange!90, draw=orange!70!black, rounded corners=2pt},
-  milestone label node/.style={text width=4.0cm, align=right, font=\footnotesize\itshape},
-  link/.style={-latex, draw=gray!60}
-]{1}{12}
+  bar label node/.style={text width=3.8cm, align=right, font=\footnotesize},
+  group/.style={fill=primary!70, draw=primary},
+  group label node/.style={text width=3.8cm, align=right, font=\footnotesize\bfseries},
+  group peaks height=0.20,
+  milestone/.style={fill=orange!85, draw=orange!60!black},
+  milestone label node/.style={text width=3.8cm, align=right, font=\footnotesize\itshape},
+  link/.style={-latex, draw=gray!50}
+]{1}{11}
 
-  % ── Titres ────────────────────────────────────────────────────────────────
+  %% ── Ligne 1 : phases
   \gantttitle{Phase 1 — Exploration}{4}
-  \gantttitle{Phase 2 — Prototype}{5}
-  \gantttitle{Phase 3 — Éval. \& Rédaction}{2} \\
+  \gantttitle{Phase 2 — Prototype}{4}
+  \gantttitle{Ph.3 — Éval./Réd.}{3} \\
 
-  \gantttitle[title label font=\scriptsize\color{gray}]{Mar}{1}
-  \gantttitle[title label font=\scriptsize\color{gray}]{Avr}{1}
-  \gantttitle[title label font=\scriptsize\color{gray}]{Mai}{1}
-  \gantttitle[title label font=\scriptsize\color{gray}]{Juin}{1}
-  \gantttitle[title label font=\scriptsize\color{gray}]{Sep}{1}
-  \gantttitle[title label font=\scriptsize\color{gray}]{Oct}{1}
-  \gantttitle[title label font=\scriptsize\color{gray}]{Nov}{1}
-  \gantttitle[title label font=\scriptsize\color{gray}]{Déc}{1}
-  \gantttitle[title label font=\scriptsize\color{gray}]{Jan}{1}
-  \gantttitle[title label font=\scriptsize\color{gray}]{Fév}{1}
-  \gantttitle[title label font=\scriptsize\color{gray}]{Mars}{1} \\
+  %% ── Ligne 2 : mois
+  \gantttitle[title/.style={fill=white,draw=gray!40},
+    title label font=\scriptsize\color{gray!80}]{Mar}{1}
+  \gantttitle[title/.style={fill=white,draw=gray!40},
+    title label font=\scriptsize\color{gray!80}]{Avr}{1}
+  \gantttitle[title/.style={fill=white,draw=gray!40},
+    title label font=\scriptsize\color{gray!80}]{Mai}{1}
+  \gantttitle[title/.style={fill=white,draw=gray!40},
+    title label font=\scriptsize\color{gray!80}]{Juin}{1}
+  \gantttitle[title/.style={fill=white,draw=gray!40},
+    title label font=\scriptsize\color{gray!80}]{Sep}{1}
+  \gantttitle[title/.style={fill=white,draw=gray!40},
+    title label font=\scriptsize\color{gray!80}]{Oct}{1}
+  \gantttitle[title/.style={fill=white,draw=gray!40},
+    title label font=\scriptsize\color{gray!80}]{Nov}{1}
+  \gantttitle[title/.style={fill=white,draw=gray!40},
+    title label font=\scriptsize\color{gray!80}]{Déc}{1}
+  \gantttitle[title/.style={fill=white,draw=gray!40},
+    title label font=\scriptsize\color{gray!80}]{Jan}{1}
+  \gantttitle[title/.style={fill=white,draw=gray!40},
+    title label font=\scriptsize\color{gray!80}]{Fév}{1}
+  \gantttitle[title/.style={fill=white,draw=gray!40},
+    title label font=\scriptsize\color{gray!80}]{Mars}{1} \\
 
-  % ── Phase 1 ───────────────────────────────────────────────────────────────
-  \ganttbar[bar/.style={fill=axeA!50,draw=axeA}]
-    {J1}{1}{3} \\
-  \ganttbar[bar/.style={fill=axeA!50,draw=axeA}]
-    {J2}{3}{4} \\
+  %% ── PHASE 1
+  \ganttgroup[group/.style={fill=axeA!65,draw=axeA}]{Phase 1}{1}{4} \\
+  \ganttbar[bar/.style={fill=axeA!45,draw=axeA,rounded corners=1pt}]
+    {J1}{1}{4} \\
+  \ganttbar[bar/.style={fill=axeA!45,draw=axeA,rounded corners=1pt}]
+    {J2}{4}{4} \\
   \ganttmilestone[milestone/.style={fill=orange,draw=orange!70!black}]
-    {Livrable 1}{4} \\[0.2em]
+    {M1}{4} \\
 
-  % ── Phase 2 ───────────────────────────────────────────────────────────────
-  \ganttbar[bar/.style={fill=axeB!50,draw=axeB}]
-    {J3}{5}{6} \\
-  \ganttbar[bar/.style={fill=axeB!50,draw=axeB}]
-    {J4}{6}{7} \\
-  \ganttbar[bar/.style={fill=axeB!50,draw=axeB}]
+  %% ── PHASE 2
+  \ganttgroup[group/.style={fill=axeB!65,draw=axeB}]{Phase 2}{5}{8} \\
+  \ganttbar[bar/.style={fill=axeB!45,draw=axeB,rounded corners=1pt}]
+    {J3}{5}{5} \\
+  \ganttbar[bar/.style={fill=axeB!45,draw=axeB,rounded corners=1pt}]
+    {J4}{6}{6} \\
+  \ganttbar[bar/.style={fill=axeB!45,draw=axeB,rounded corners=1pt}]
     {J5}{6}{7} \\
-  \ganttbar[bar/.style={fill=axeB!50,draw=axeB}]
-    {J6}{7}{8} \\
-  \ganttbar[bar/.style={fill=axeB!50,draw=axeB}]
-    {J7}{8}{8} \\
+  \ganttbar[bar/.style={fill=axeB!45,draw=axeB,rounded corners=1pt}]
+    {J6}{7}{7} \\
+  \ganttbar[bar/.style={fill=axeB!45,draw=axeB,rounded corners=1pt}]
+    {J7}{7}{8} \\
   \ganttmilestone[milestone/.style={fill=orange,draw=orange!70!black}]
-    {Livrable 2}{8} \\[0.2em]
+    {M2}{8} \\
 
-  % ── Phase 3 ───────────────────────────────────────────────────────────────
-  \ganttbar[bar/.style={fill=axeC!45,draw=axeC}]
-    {J8}{9}{10} \\
-  \ganttbar[bar/.style={fill=axeC!45,draw=axeC}]
+  %% ── PHASE 3
+  \ganttgroup[group/.style={fill=axeC!65,draw=axeC}]{Phase 3}{9}{11} \\
+  \ganttbar[bar/.style={fill=axeC!40,draw=axeC,rounded corners=1pt}]
+    {J8}{9}{9} \\
+  \ganttbar[bar/.style={fill=axeC!40,draw=axeC,rounded corners=1pt}]
     {J9}{9}{10} \\
-  \ganttbar[bar/.style={fill=axeC!45,draw=axeC}]
-    {J10}{10}{11} \\
-  \ganttbar[bar/.style={fill=axeC!45,draw=axeC}]
+  \ganttbar[bar/.style={fill=axeC!40,draw=axeC,rounded corners=1pt}]
+    {J10}{9}{10} \\
+  \ganttbar[bar/.style={fill=axeC!40,draw=axeC,rounded corners=1pt}]
     {J11}{11}{11} \\
   \ganttmilestone[milestone/.style={fill=orange,draw=orange!70!black}]
-    {Livrable final}{11}
+    {M3}{11}
 
 \end{ganttchart}
-\end{center}
 
-\vspace{0.3em}
-{\footnotesize\textit{%
+\vspace{0.4em}
+\noindent\footnotesize
 \textcolor{axeA}{\rule{0.7cm}{4pt}}~Phase 1 / Axe A \quad
 \textcolor{axeB}{\rule{0.7cm}{4pt}}~Phase 2 / Axe B \quad
 \textcolor{axeC}{\rule{0.7cm}{4pt}}~Phase 3 / Axe C \quad
-\textcolor{orange}{\rule{0.7cm}{4pt}\hspace{1pt}}~Jalon \quad}}
+\textcolor{orange}{\rule{0.5cm}{4pt}}~Jalon \quad
 
 \end{landscape}
 

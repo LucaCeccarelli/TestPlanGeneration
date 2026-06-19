@@ -66,8 +66,13 @@ python scripts/run_axis_a.py \
   --pdf data/input/iso_18013_5.pdf \
   --norm "ISO/IEC 18013-5" \
   --output-chunks data/output/chunks/iso_18013_5_chunks.jsonl \
-  --output-index data/output/index/faiss_index
+  --output-index data/output/index/faiss_index \
+  --skip-pages 1 2 3 4 5 6 7 8
 ```
+
+`--skip-pages` accepts any number of 1-based page numbers to exclude from
+extraction (cover page, table of contents, etc.). Adjust the range to match
+your specific PDF.
 
 ### Axis B — generate test plan
 

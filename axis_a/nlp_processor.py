@@ -4,6 +4,24 @@ Runs a spaCy pipeline over page text to:
 - detect sentence boundaries,
 - flag normative sentences (modal verbs with POS ``AUX`` or ``VERB``),
 - detect section headers via regex.
+
+Subsection-scoped processing
+-----------------------------
+``annotate_text()`` splits the input into subsections before calling spaCy so
+that each ``nlp()`` call operates on a single, self-contained subsection (the
+text between two numbered section headers such as "7.2.1").
+
+Benefits over running ``nlp()`` on the entire document:
+* No sentence ever straddles two different sections -- every
+  :class:`AnnotatedSentence` belongs to exactly one section.
+* Each spaCy call is short (a few hundred to a few thousand characters),
+  staying well within the default 1 M character limit and processing faster.
+* Section labels are determined structurally (which subsection block the text
+  belongs to) rather than heuristically (nearest prior header in char-offset
+  space).
+
+The external interface is unchanged: callers still call
+``annotate_text(text)`` and receive a flat list of :class:`AnnotatedSentence`.
 """
 
 from __future__ import annotations
@@ -34,7 +52,13 @@ MODAL_TERMS: set[str] = {
 _MODAL_HEADS: set[str] = {"shall", "must", "should", "may", "need"}
 
 # Section header regex, compiled once at module level (SPEC SS4).
+# Matches lines that start with a dotted number such as "7.2.1 Title text".
 SECTION_HEADER_RE: re.Pattern[str] = re.compile(r"^(\d+(?:\.\d+)+)\s+\S")
+
+# Same pattern but as a multiline search for splitting the full document.
+_SECTION_SPLIT_RE: re.Pattern[str] = re.compile(
+    r"(?m)^(\d+(?:\.\d+)+)\s+\S.*$"
+)
 
 
 @dataclass
@@ -83,47 +107,71 @@ def detect_modals(doc_or_text: "spacy.tokens.Doc | str") -> list[str]:
     return found
 
 
+def _split_into_subsections(text: str) -> list[tuple[str, str]]:
+    """Split *text* into ``(section_number, body_text)`` pairs.
+
+    The preamble (any text before the first numbered section header) is
+    returned as ``("", preamble_text)``.  Each subsequent subsection starts at
+    its header line and ends just before the next header.
+
+    Returns
+    -------
+    list of (section_number, body_text) tuples
+    """
+    matches = list(_SECTION_SPLIT_RE.finditer(text))
+    if not matches:
+        # No section headers at all -- treat the whole text as one block.
+        return [("", text)]
+
+    subsections: list[tuple[str, str]] = []
+
+    # Preamble: text before the first header.
+    preamble = text[: matches[0].start()]
+    if preamble.strip():
+        subsections.append(("", preamble))
+
+    for idx, match in enumerate(matches):
+        section_number = match.group(1)
+        body_start = match.start()
+        body_end = matches[idx + 1].start() if idx + 1 < len(matches) else len(text)
+        body = text[body_start:body_end]
+        subsections.append((section_number, body))
+
+    return subsections
+
+
 def annotate_text(text: str) -> list[AnnotatedSentence]:
     """Annotate *text*: sentence boundaries, normative flags, section tracking.
 
-    Section headers update the running ``section`` attached to each following
-    sentence.
+    The text is first split into subsections at numbered section headers (e.g.
+    ``"7.2.1 Title"``).  spaCy is then run independently on each subsection so
+    that sentences never straddle section boundaries and each call to ``nlp()``
+    is short.  All resulting :class:`AnnotatedSentence` objects carry the
+    section number of the subsection they came from.
     """
     annotated: list[AnnotatedSentence] = []
-    current_section = ""
 
-    # Track section headers line by line first, mapping char offsets -> section.
-    section_at_offset: list[tuple[int, str]] = []
-    offset = 0
-    for line in text.split("\n"):
-        header = detect_section_header(line)
-        if header is not None:
-            section_at_offset.append((offset, header))
-        offset += len(line) + 1  # +1 for the newline
+    subsections = _split_into_subsections(text)
+    logger.debug("Annotating %d subsections", len(subsections))
 
-    def _section_for(char_offset: int) -> str:
-        result = ""
-        for start, sec in section_at_offset:
-            if start <= char_offset:
-                result = sec
-            else:
-                break
-        return result
-
-    doc = nlp(text)
-    for sent in doc.sents:
-        sent_text = sent.text.strip()
-        if not sent_text:
+    for section_number, body in subsections:
+        if not body.strip():
             continue
-        modals = detect_modals(sent.as_doc())
-        current_section = _section_for(sent.start_char) or current_section
-        annotated.append(
-            AnnotatedSentence(
-                text=sent_text,
-                is_normative=bool(modals),
-                modals=modals,
-                section=current_section,
+
+        doc = nlp(body)
+        for sent in doc.sents:
+            sent_text = sent.text.strip()
+            if not sent_text:
+                continue
+            modals = detect_modals(sent.as_doc())
+            annotated.append(
+                AnnotatedSentence(
+                    text=sent_text,
+                    is_normative=bool(modals),
+                    modals=modals,
+                    section=section_number,
+                )
             )
-        )
-    logger.debug("Annotated %d sentences", len(annotated))
+
+    logger.debug("Annotated %d sentences across %d subsections", len(annotated), len(subsections))
     return annotated

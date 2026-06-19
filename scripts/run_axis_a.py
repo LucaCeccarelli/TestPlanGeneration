@@ -6,7 +6,8 @@ Usage:
         --pdf data/input/iso_18013_5.pdf \\
         --norm "ISO/IEC 18013-5" \\
         --output-chunks data/output/chunks/iso_18013_5_chunks.jsonl \\
-        --output-index data/output/index/faiss_index
+        --output-index data/output/index/faiss_index \\
+        --skip-pages 1 2 3 4 5 6 7 8
 """
 
 from __future__ import annotations
@@ -39,6 +40,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--output-index", type=Path, required=True,
         help="Output directory for the FAISS index",
     )
+    parser.add_argument(
+        "--skip-pages", nargs="*", type=int, default=[], metavar="N",
+        help=(
+            "Page numbers to skip entirely (1-based). "
+            "Use this to exclude cover pages, table of contents, etc. "
+            "Example: --skip-pages 1 2 3 4 5 6 7 8"
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -66,7 +75,10 @@ def main(argv: list[str] | None = None) -> int:
         from axis_a.pdf_extractor import extract_pages, pages_to_marked_text
 
         logger.info("Extracting pages from %s", args.pdf)
-        marked_text = pages_to_marked_text(extract_pages(args.pdf))
+        skip_pages: set[int] = set(args.skip_pages) if args.skip_pages else set()
+        if skip_pages:
+            logger.info("Skipping pages: %s", sorted(skip_pages))
+        marked_text = pages_to_marked_text(extract_pages(args.pdf, skip_pages=skip_pages))
         if not marked_text.strip():
             logger.error("No text extracted from %s", args.pdf)
             return 1

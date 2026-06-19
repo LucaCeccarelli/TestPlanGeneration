@@ -4,6 +4,17 @@ Runs the Analyst -> RAG Router -> Designer chain over every normative
 requirement chunk, collects the resulting test cases into the full ISO
 29119-3 hierarchy, and writes the final :class:`~axis_b.schema.TestPlan`
 to disk.
+
+B1 — Planner agent:
+    :func:`run_planner` is called once before the per-chunk loop.  It
+    clusters all normative chunks into feature-set groups and identifies
+    shared preconditions.  Each Designer call receives the cluster's
+    ``feature_set_name`` and ``shared_preconditions`` as hints injected into
+    the prompt via ``router_output``.
+
+B3 — BERTScore gate:
+    ``run_designer`` now accepts ``source_text`` (the raw chunk text) so it
+    can score both candidates against the source requirement.
 """
 
 from __future__ import annotations
@@ -18,6 +29,7 @@ from pydantic import ValidationError
 from axis_a.chunker import slugify_norm
 from axis_b.agents.analyst import run_analyst
 from axis_b.agents.designer import run_designer
+from axis_b.agents.planner import run_planner
 from axis_b.agents.rag_router import run_rag_router
 from axis_b.llm_setup import init_tools
 from axis_b.schema import (
@@ -49,15 +61,37 @@ def _section_from_traceability(traceability: str) -> str:
     return match.group(1).rstrip(".") if match else ""
 
 
+def _find_cluster_for_chunk(
+    chunk_id: str,
+    plan_skeleton: dict[str, dict],
+) -> tuple[str, list[str]]:
+    """Return ``(feature_set_name, shared_preconditions)`` for this chunk_id.
+
+    Falls back to ``("General", [])`` if no skeleton entry covers the chunk.
+    """
+    for fs_name, entry in plan_skeleton.items():
+        if chunk_id in entry.get("chunk_ids", []):
+            return fs_name, entry.get("shared_preconditions", [])
+    return "General", []
+
+
 def generate_test_cases(
     chunks: list[RequirementChunk],
+    plan_skeleton: dict[str, dict] | None = None,
 ) -> tuple[list[TestCase], dict[str, str]]:
     """Run the three-agent chain over all normative chunks.
 
+    B1: If *plan_skeleton* is provided, each chunk is looked up in the
+    skeleton to obtain its ``feature_set_name`` and ``shared_preconditions``,
+    which are injected into the ``router_output`` dict before the Designer
+    call.
+
     Returns the generated test cases and a mapping ``tc_id -> source section``
-    used for coverage reporting. A failure on one chunk is logged and skipped;
-    the pipeline never crashes on a single bad chunk.
+    used for coverage reporting. A failure on one chunk is logged and skipped.
     """
+    if plan_skeleton is None:
+        plan_skeleton = {}
+
     normative_chunks = [c for c in chunks if c.is_normative]
     logger.info(
         "Processing %d normative chunks (of %d total)",
@@ -70,7 +104,24 @@ def generate_test_cases(
         try:
             analyst_output = run_analyst(chunk)
             router_output = run_rag_router(analyst_output)
-            test_case = run_designer(router_output)
+
+            # B1: inject planner hints into the router package
+            if plan_skeleton:
+                fs_name, shared_pcs = _find_cluster_for_chunk(
+                    chunk.chunk_id, plan_skeleton
+                )
+                router_output["_planner_feature_set"] = fs_name
+                router_output["_planner_shared_preconditions"] = shared_pcs
+
+            # B3: pass source_text for BERTScore candidate selection
+            test_case = run_designer(router_output, source_text=chunk.text)
+
+            # B1: override feature_set with planner assignment when available
+            if plan_skeleton:
+                fs_name = router_output.get("_planner_feature_set", test_case.feature_set)
+                if fs_name and fs_name != "General":
+                    test_case = test_case.model_copy(update={"feature_set": fs_name})
+
             test_cases.append(test_case)
             tc_sections[test_case.tc_id] = chunk.section
             logger.info(
@@ -192,7 +243,13 @@ def run_pipeline(
     """Run the full Axis B pipeline and write the resulting plan to disk."""
     init_tools(Path(index_path))
 
-    test_cases, tc_sections = generate_test_cases(chunks)
+    # B1: run the Planner once to produce the feature-set skeleton
+    logger.info("Running Planner agent to build feature-set skeleton …")
+    plan_skeleton = run_planner(chunks)
+    if not plan_skeleton:
+        logger.warning("Planner returned empty skeleton — proceeding without clustering.")
+
+    test_cases, tc_sections = generate_test_cases(chunks, plan_skeleton=plan_skeleton)
     plan = build_test_plan(test_cases, tc_sections, norm, plan_id)
 
     # Validate the full plan before writing the research artifact.

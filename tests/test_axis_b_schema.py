@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pydantic import ValidationError
 
-from axis_b.schema import TestCase, TestInput
+from axis_b.schema import RequirementChunk, TestCase, TestInput
 
 
 def _full_test_case_data() -> dict:
@@ -95,3 +96,154 @@ def test_actual_results_defaults_to_empty_string() -> None:
 
     tc = TestCase.model_validate(data)
     assert tc.actual_results == ""
+
+
+# ---------------------------------------------------------------------------
+# B1 — Planner agent tests
+# ---------------------------------------------------------------------------
+
+def _make_chunk(chunk_id: str, section: str, is_normative: bool = True) -> RequirementChunk:
+    return RequirementChunk(
+        chunk_id=chunk_id,
+        text=f"The system SHALL comply with requirement {chunk_id} in section {section}.",
+        section=section,
+        page_start=1,
+        is_normative=is_normative,
+        modals=["shall"] if is_normative else [],
+        source_norm="ISO/IEC 18013-5",
+    )
+
+
+def test_planner_returns_clusters_matching_section_prefixes() -> None:
+    """run_planner must group chunks into clusters; count must equal distinct top-level sections."""
+    from axis_b.agents.planner import run_planner
+
+    # Two chunks from section 7.x and two from section 8.x
+    chunks = [
+        _make_chunk("norm_0000", "7.1"),
+        _make_chunk("norm_0001", "7.2"),
+        _make_chunk("norm_0002", "8.1"),
+        _make_chunk("norm_0003", "8.2"),
+    ]
+
+    # Mock embeddings: section-7 chunks get one vector, section-8 get another
+    import numpy as np
+
+    def fake_embed_documents(texts: list[str]) -> list[list[float]]:
+        result = []
+        for t in texts:
+            if "7." in t or "norm_000" in t:
+                # Use chunk_id embedded in text to differentiate
+                pass
+        # Return distinct orthogonal vectors per section prefix
+        vectors = []
+        for chunk in chunks:
+            if chunk.section.startswith("7"):
+                vectors.append([1.0, 0.0, 0.0] + [0.0] * 125)
+            else:
+                vectors.append([0.0, 1.0, 0.0] + [0.0] * 125)
+        return vectors
+
+    mock_embedder = MagicMock()
+    mock_embedder.embed_documents.side_effect = fake_embed_documents
+
+    with patch("axis_b.agents.planner._get_embedder", return_value=mock_embedder):
+        skeleton = run_planner(chunks, seed=42)
+
+    # We expect 2 clusters (one per top-level section prefix: 7 and 8)
+    assert len(skeleton) == 2, f"Expected 2 clusters, got {len(skeleton)}: {list(skeleton.keys())}"
+    all_chunk_ids = [cid for entry in skeleton.values() for cid in entry["chunk_ids"]]
+    assert set(all_chunk_ids) == {"norm_0000", "norm_0001", "norm_0002", "norm_0003"}
+
+
+def test_planner_shared_preconditions_detected() -> None:
+    """Sentences with normative modal + setup verb appearing in ≥50% of cluster chunks
+    must be promoted to shared_preconditions."""
+    from axis_b.agents.planner import _derive_shared_preconditions
+
+    shared_sentence = "The mDL SHALL establish a secure channel before data transfer."
+    chunks = [
+        RequirementChunk(
+            chunk_id=f"norm_{i:04d}",
+            text=f"{shared_sentence} Additional requirement {i}.",
+            section="7.1",
+            page_start=1,
+            is_normative=True,
+            modals=["shall"],
+            source_norm="ISO/IEC 18013-5",
+        )
+        for i in range(4)
+    ]
+    pcs = _derive_shared_preconditions(chunks)
+    assert any("establish" in pc.lower() for pc in pcs), (
+        f"Expected setup sentence in shared_preconditions, got: {pcs}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# B2 — Schema-constrained generation tests
+# ---------------------------------------------------------------------------
+
+def test_designer_schema_embedded_in_system_prompt() -> None:
+    """The Designer's system prompt must contain the TestCase JSON Schema."""
+    from axis_b.agents.designer import _TC_SCHEMA_JSON
+
+    # The schema JSON must contain a key that only appears in the TestCase schema
+    assert "coverage_item_id" in _TC_SCHEMA_JSON, (
+        "TestCase JSON Schema not embedded in designer system prompt template"
+    )
+    assert "requirement_type" in _TC_SCHEMA_JSON
+
+
+def test_designer_error_reflective_retry_names_failing_field() -> None:
+    """On ValidationError the retry prompt must name the specific failing field."""
+    from axis_b.agents.designer import _build_validation_retry_instruction
+
+    # Construct a real ValidationError by validating bad data
+    try:
+        TestCase.model_validate({"tc_id": "", "priority": "INVALID"})
+    except ValidationError as exc:
+        retry_msg = _build_validation_retry_instruction(exc)
+        # The retry message must mention at least one field name
+        assert "priority" in retry_msg or "tc_id" in retry_msg or "Field" in retry_msg
+
+
+# ---------------------------------------------------------------------------
+# B3 — BERTScore self-evaluation gate test
+# ---------------------------------------------------------------------------
+
+def test_bertscore_gate_flags_low_confidence() -> None:
+    """When inter-candidate BERTScore F1 < BERTSCORE_THRESHOLD, notes must be flagged."""
+    from axis_b.agents.designer import run_designer
+    from axis_b.llm_setup import BERTSCORE_THRESHOLD
+
+    valid_tc_data = _full_test_case_data()
+
+    mock_agent = MagicMock()
+    mock_agent.run.return_value = json.dumps(valid_tc_data)
+
+    with (
+        patch("axis_b.agents.designer.Agent", return_value=mock_agent),
+        patch("axis_b.agents.designer.compute_bertscore_f1", return_value=BERTSCORE_THRESHOLD - 0.1),
+    ):
+        router_output = {
+            "analyst_output": {
+                "chunk_id": "iso_iec_18013_5_0042",
+                "section": "7.2.1",
+                "requirement_type": "SHALL",
+                "preconditions": [],
+                "related_sections": [],
+                "requirement_summary": "test",
+                "testable_assertion": "test",
+            },
+            "supporting_clauses": [],
+            "cross_norm_refs": [],
+            "definitions": {},
+            "test_method_hints": "",
+            "full_context_summary": "",
+        }
+        tc = run_designer(router_output, source_text="source requirement text")
+
+    assert "low-confidence" in tc.notes, (
+        f"Expected low-confidence flag in notes, got: {tc.notes!r}"
+    )

@@ -38,6 +38,29 @@ class RequirementChunk(BaseModel):
         description='Modal verbs found in the chunk, e.g. ["shall", "must not"]',
     )
     source_norm: str = Field(..., description='Source norm name, e.g. "ISO/IEC 18013-5"')
+    # --- A1: two-pass chunking ---
+    is_full_clause: bool = Field(
+        default=False,
+        description=(
+            "True if the chunk survived the first pass intact (fits within CHUNK_SIZE "
+            "without further splitting). Acts as a downstream confidence signal."
+        ),
+    )
+    # --- A3: cross-reference resolution and defined-terms injection ---
+    context_refs: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Short excerpts (first 150 chars) of other norm chunks that this chunk "
+            "cross-references via '§ / clause / section / table / annex' patterns."
+        ),
+    )
+    defined_terms: dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "Subset of the norm's Terms and Definitions (§3) whose keys appear in "
+            "this chunk's text. Injected to give agents grounded definitions."
+        ),
+    )
 
 
 class TestInput(BaseModel):

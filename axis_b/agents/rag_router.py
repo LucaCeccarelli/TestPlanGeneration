@@ -2,6 +2,12 @@
 
 Enriches the Analyst's output with supporting context retrieved from the
 norm knowledge base.
+
+A2 — Minimum-evidence guard:
+    Before constructing the LLM prompt, checks whether the hybrid retrieval
+    returned at least one normative chunk for the analyst's testable
+    assertion.  If not, falls back to ``get_chunks_for_section`` to guarantee
+    the Designer always receives normative grounding.
 """
 
 from __future__ import annotations
@@ -11,7 +17,6 @@ import logging
 import re
 
 from axis_b.deepagents_compat import Agent
-
 from axis_b.llm_setup import (
     get_chunks_for_section,
     get_llm,
@@ -20,12 +25,13 @@ from axis_b.llm_setup import (
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """You are a retrieval specialist for technical standards.
-You receive an analyst's interpretation of one normative clause. Your job is
-to gather every piece of supporting context a test designer will need.
+SYSTEM_PROMPT = """You are the second agent in a three-stage traceability chain.
+You are a retrieval specialist for technical standards. Your role is to enrich
+the analyst's interpretation with supporting context drawn ONLY from the norm
+knowledge base. Cite each retrieved chunk by its chunk_id.
 
 Use your tools:
-- search_norm_knowledge_base(query): semantic search over the whole norm.
+- search_norm_knowledge_base(query): semantic + keyword hybrid search over the norm.
 - get_chunks_for_section(section_number): fetch all clauses of a section.
 
 Look up the related sections the analyst listed, find definitions of technical
@@ -45,6 +51,13 @@ RETRY_INSTRUCTION = (
     "Your previous response was not valid JSON. Return only a raw JSON object."
 )
 
+_NORMATIVE_MARKER = re.compile(r"\b(SHALL|MUST|SHOULD|MAY)\b")
+
+
+def _has_normative_content(retrieved_text: str) -> bool:
+    """Return True if the retrieved text contains at least one normative modal."""
+    return bool(_NORMATIVE_MARKER.search(retrieved_text))
+
 
 def _strip_markdown_fences(raw: str) -> str:
     """Remove a surrounding ``` / ```json fence from the agent output."""
@@ -54,11 +67,37 @@ def _strip_markdown_fences(raw: str) -> str:
 def run_rag_router(analyst_output: dict) -> dict:
     """Run the RAG Router agent on the Analyst's output.
 
+    A2: Before building the agent prompt, checks that the hybrid search
+    returns normative content.  If not, invokes ``get_chunks_for_section``
+    automatically and prepends the results as ``SECTION FALLBACK CONTEXT``.
+
     Returns the enriched context package (including ``analyst_output``).
     Retries once on invalid JSON; raises :class:`ValueError` (carrying the
     chunk_id) after two failures.
     """
     chunk_id = analyst_output.get("chunk_id", "<unknown>")
+    section = analyst_output.get("section", "")
+    testable_assertion = analyst_output.get("testable_assertion", "")
+
+    # --- A2: minimum-evidence guard ---
+    fallback_context = ""
+    if testable_assertion:
+        probe = search_norm_knowledge_base.invoke(testable_assertion)
+        if not _has_normative_content(probe):
+            logger.info(
+                "No normative evidence for chunk %s assertion; "
+                "falling back to section %s retrieval.",
+                chunk_id, section,
+            )
+            if section:
+                fallback_text = get_chunks_for_section.invoke(section)
+                if fallback_text and "No chunks found" not in fallback_text:
+                    fallback_context = (
+                        f"\n\n--- SECTION FALLBACK CONTEXT (§{section}) ---\n"
+                        f"{fallback_text}\n"
+                        "--- END SECTION FALLBACK CONTEXT ---"
+                    )
+
     agent = Agent(
         name="rag_router",
         llm=get_llm(),
@@ -66,15 +105,18 @@ def run_rag_router(analyst_output: dict) -> dict:
         tools=[search_norm_knowledge_base, get_chunks_for_section],
     )
 
-    prompt = (
+    base_prompt = (
         "Gather supporting context for this analysed requirement.\n"
         f"--- ANALYST OUTPUT ---\n{json.dumps(analyst_output, indent=2)}\n"
         "--- END ANALYST OUTPUT ---"
+        + fallback_context
     )
 
     last_error: Exception | None = None
     for attempt in range(2):
-        raw = agent.run(prompt if attempt == 0 else f"{prompt}\n\n{RETRY_INSTRUCTION}")
+        raw = agent.run(
+            base_prompt if attempt == 0 else f"{base_prompt}\n\n{RETRY_INSTRUCTION}"
+        )
         cleaned = _strip_markdown_fences(raw)
         try:
             data = json.loads(cleaned)
